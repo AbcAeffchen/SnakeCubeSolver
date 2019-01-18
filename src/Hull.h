@@ -52,16 +52,15 @@ template<char size>
 class Hull
 {
     std::vector<bool> outerCube = std::vector<bool>(8ul * size * size * size, false);
-    std::vector<char> min = std::vector<char>(3, 0);
-    std::vector<char> max = std::vector<char>(3, 0);
+    std::vector<char> borders = std::vector<char>(6, 0);
 
     template<unsigned long dim>
     void updateRange(const char v)
     {
-        if(min[dim] > v)
-            min[dim] = v;
-        else if(max[dim] < v)
-            max[dim] = v;
+        if(borders[2*dim] > v)
+            borders[2*dim] = v;
+        else if(borders[2*dim+1] < v)
+            borders[2*dim+1] = v;
     }
 
     bool checkInHull(const char v) const
@@ -75,10 +74,10 @@ class Hull
         if(!checkInHull(v))
             return false;
 
-        if(min[dim] <= v && max[dim] >= v)
+        if(borders[2*dim] <= v && borders[2*dim+1] >= v)
             return true;
 
-        return max[dim] - min[dim] < size - 1;
+        return borders[2*dim+1] - borders[2*dim] < size - 1;
     }
 
     static unsigned long coordinateToLong(const point& p)
