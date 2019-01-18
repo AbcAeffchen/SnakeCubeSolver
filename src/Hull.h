@@ -56,25 +56,22 @@ class Hull
     std::vector<char> max = std::vector<char>(3, 0);
 
     template<unsigned long dim>
-    void updateRange(char v)
+    void updateRange(const char v)
     {
         if(min[dim] > v)
             min[dim] = v;
-
-        if(max[dim] < v)
+        else if(max[dim] < v)
             max[dim] = v;
     }
 
-    bool checkInHull(char v) const
+    bool checkInHull(const char v) const
     {
         return !(v <= -size || v >= size);
     }
 
     template<unsigned long dim>
-    bool checkRange(char v) const
+    bool checkRange(const char v) const
     {
-//        assert(v >= min[dim] - 1 && v <= max[dim] + 1);
-
         if(!checkInHull(v))
             return false;
 
@@ -84,14 +81,14 @@ class Hull
         return max[dim] - min[dim] < size - 1;
     }
 
-    static unsigned long coordinateToLong(const point p)
+    static unsigned long coordinateToLong(const point& p)
     {
         return (p.x + size - 1)
                + (2ul * size) * (p.y + size - 1)
                + (4ul * size * size) * (p.z + size - 1);
     }
 
-    bool checkValid(const point p) const
+    bool checkValid(const point& p) const
     {
         return checkRange<xDim>(p.x)
                && checkRange<yDim>(p.y)
@@ -105,7 +102,7 @@ public:
         outerCube[Hull::coordinateToLong({0, 0, 0})] = true;
     }
 
-    bool use(const point p)
+    bool use(const point& p)
     {
         if(!checkValid(p))
             return false;

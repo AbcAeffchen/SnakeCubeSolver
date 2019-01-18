@@ -10,14 +10,18 @@
 #include "Hull.h"
 #include <iostream>
 
-template<char size>
+template<char size, bool countPlacements = false>
 class Walker
 {
     using solution_type = std::vector<directions>;
+    using segment_type = unsigned char;
+    using segment_list_type = std::vector<segment_type>;
+
+    const segment_list_type segmentList;
 
     unsigned long placementsCount = 0;
 
-    void print(const solution_type& s)
+    void print(const solution_type& s) const
     {
         for(auto a : s)
         {
@@ -36,15 +40,13 @@ class Walker
         std::cout << std::endl;
     }
 
-    void printStatistic()
+    void printStatistic() const
     {
         std::cout << "Placements: " << placementsCount << std::endl;
     }
 
-    const std::vector<unsigned char> segmentList;
-
     template<int i>
-    directions getNextDirection(const unsigned char prevDirection) const
+    directions getNextDirection(const directions prevDirection) const
     {
         switch(i)
         {
@@ -52,13 +54,15 @@ class Walker
             case 1: return (prevDirection == RIGHT || prevDirection == LEFT) ? FRONT : RIGHT;
             case 2: return (prevDirection == RIGHT || prevDirection == LEFT) ? BACK : LEFT;
             case 3: return (prevDirection == UP || prevDirection == DOWN) ? BACK : DOWN;
-//            default: assert(false);
+            default: assert(false);
         }
     }
 
-    bool placeSegment(Hull<size>& h, point& p, const unsigned char length, const directions direction)
+    bool placeSegment(Hull<size>& h, point& p, const segment_type length, const directions direction)
     {
-        placementsCount++;
+        if constexpr (countPlacements)
+            placementsCount++;
+
         for(unsigned int i = 0; i < length; i++)
         {
             p.moveStep(direction);
@@ -79,7 +83,9 @@ class Walker
         if(segmentList.size() < nextSegmentIndex + 1)
         {
             print(solution);
-            printStatistic();
+            if constexpr (countPlacements)
+                printStatistic();
+
             return;
         }
 
@@ -94,14 +100,15 @@ class Walker
     }
 
 public:
-    explicit Walker(std::vector<unsigned char> segmentList)
+    explicit Walker(segment_list_type segmentList)
         : segmentList(std::move(segmentList))
     {}
 
-    void startSearch()
+    void search()
     {
         Hull<size> h;
         point p{0,0,0};
+
         solution_type solution(segmentList.size());
         solution[0] = BACK;
         solution[1] = RIGHT;
