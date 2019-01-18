@@ -57,15 +57,15 @@ class Hull
     template<unsigned long dim>
     void updateRange(const char v)
     {
-        if(borders[2*dim] > v)
-            borders[2*dim] = v;
-        else if(borders[2*dim+1] < v)
-            borders[2*dim+1] = v;
+        if(borders[2 * dim] > v)
+            borders[2 * dim] = v;
+        else if(borders[2 * dim + 1] < v)
+            borders[2 * dim + 1] = v;
     }
 
     bool checkInHull(const char v) const
     {
-        return !(v <= -size || v >= size);
+        return -size < v && v < size;
     }
 
     template<unsigned long dim>
@@ -74,13 +74,13 @@ class Hull
         if(!checkInHull(v))
             return false;
 
-        if(borders[2*dim] <= v && borders[2*dim+1] >= v)
+        if(borders[2 * dim] <= v && v <= borders[2 * dim + 1])
             return true;
 
-        return borders[2*dim+1] - borders[2*dim] < size - 1;
+        return borders[2 * dim + 1] - borders[2 * dim] < size - 1;
     }
 
-    static unsigned long coordinateToLong(const point& p)
+    constexpr unsigned long coordinateToLong(const point& p) const
     {
         return (p.x + size - 1)
                + (2ul * size) * (p.y + size - 1)
@@ -89,16 +89,14 @@ class Hull
 
     bool checkValid(const point& p) const
     {
-        return checkRange<xDim>(p.x)
-               && checkRange<yDim>(p.y)
-               && checkRange<zDim>(p.z)
-               && !outerCube[Hull::coordinateToLong(p)];
+        return checkRange<xDim>(p.x) && checkRange<yDim>(p.y) && checkRange<zDim>(p.z)
+               && !outerCube[coordinateToLong(p)];
     }
 
 public:
     Hull()
     {
-        outerCube[Hull::coordinateToLong({0, 0, 0})] = true;
+        outerCube[coordinateToLong({0, 0, 0})] = true;
     }
 
     bool use(const point& p)
@@ -106,7 +104,7 @@ public:
         if(!checkValid(p))
             return false;
 
-        outerCube[Hull::coordinateToLong(p)] = true;
+        outerCube[coordinateToLong(p)] = true;
         updateRange<xDim>(p.x);
         updateRange<yDim>(p.y);
         updateRange<zDim>(p.z);
