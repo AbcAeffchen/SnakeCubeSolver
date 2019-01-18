@@ -1,5 +1,3 @@
-#include <utility>
-
 //
 // Created by Alex Schickedanz <alex@ae.cs.uni-frankfurt.de> on 17.01.19.
 //
@@ -8,6 +6,7 @@
 #define SNAKECUBE_WALKER_H
 
 #include "Hull.h"
+#include <cassert>
 #include <iostream>
 
 template<char size, bool countPlacements = false>

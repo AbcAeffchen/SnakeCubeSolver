@@ -6,8 +6,6 @@
 #define SNAKECUBE_SOLVER_H
 
 #include <vector>
-#include <cassert>
-#include <iostream>
 
 enum directions
 {
