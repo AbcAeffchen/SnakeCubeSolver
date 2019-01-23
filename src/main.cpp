@@ -1,19 +1,16 @@
 
 #include "Walker.h"
-#include <ctime>
 
 int main()
 {
     Walker<4> w({2, 1, 2, 1, 1, 3, 1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 2, 3, 1, 1, 1, 3, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1});
-    //Walker<3, true> w({ 2,1,1,2,1,2,1,1,2,2,1,1,1,2,2,2,2});
+//    Walker<3> w({2, 1, 1, 2, 1, 2, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 2});
 
-    const clock_t begin = clock();
+    auto begin = omp_get_wtime();
 
-    w.search();
+    w.search<false>();
 
-    const clock_t end = clock();
-
-    std::cout << static_cast<double>(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+    std::cout << (omp_get_wtime() - begin) << "s" << std::endl;
 
     return 0;
 }

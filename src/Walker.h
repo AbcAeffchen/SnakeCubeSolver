@@ -8,6 +8,7 @@
 #include "Hull.h"
 #include <cassert>
 #include <iostream>
+#include <omp.h>
 
 template<char size, bool countPlacements = false>
 class Walker
@@ -41,7 +42,8 @@ class Walker
 
     void printStatistic() const
     {
-        std::cout << "Placements: " << placementsCount << std::endl;
+        std::cout << "Placements: " << placementsCount << "\n"
+                     "Thread: " << omp_get_thread_num() << std::endl;
     }
 
     template<int i>
@@ -73,6 +75,7 @@ class Walker
         return true;
     }
 
+    template<bool parallel = false>
     void recursiveSearch(Hull<size> h, point p, unsigned long nextSegmentIndex, solution_type& solution)
     {
         const auto prevDirection = solution[nextSegmentIndex - 1];
@@ -81,21 +84,56 @@ class Walker
 
         if(segmentList.size() < nextSegmentIndex + 1)
         {
-            print(solution);
-            if constexpr (countPlacements)
-                printStatistic();
+#pragma omp critical
+            {
+                print(solution);
+                if constexpr (countPlacements)
+                    printStatistic();
+            }
 
             return;
         }
 
-        solution[nextSegmentIndex] = getNextDirection<0>(prevDirection);
-        recursiveSearch(h, p, nextSegmentIndex + 1, solution);
-        solution[nextSegmentIndex] = getNextDirection<1>(prevDirection);
-        recursiveSearch(h, p, nextSegmentIndex + 1, solution);
-        solution[nextSegmentIndex] = getNextDirection<2>(prevDirection);
-        recursiveSearch(h, p, nextSegmentIndex + 1, solution);
-        solution[nextSegmentIndex] = getNextDirection<3>(prevDirection);
-        recursiveSearch(h, p, nextSegmentIndex + 1, solution);
+        // > 0 check is for compiler optimization
+        if(parallel)
+        {
+#pragma omp parallel for num_threads(4)
+            for(int i = 0; i < 4; i++)
+            {
+                auto solutionCopy = solution;
+                if(i == 0)
+                {
+                    solutionCopy[nextSegmentIndex] = getNextDirection<0>(prevDirection);
+                    recursiveSearch(h, p, nextSegmentIndex + 1, solutionCopy);
+                }
+                else if(i == 1)
+                {
+                    solutionCopy[nextSegmentIndex] = getNextDirection<1>(prevDirection);
+                    recursiveSearch(h, p, nextSegmentIndex + 1, solutionCopy);
+                }
+                else if(i == 2)
+                {
+                    solutionCopy[nextSegmentIndex] = getNextDirection<2>(prevDirection);
+                    recursiveSearch(h, p, nextSegmentIndex + 1, solutionCopy);
+                }
+                else if(i == 3)
+                {
+                    solutionCopy[nextSegmentIndex] = getNextDirection<3>(prevDirection);
+                    recursiveSearch(h, p, nextSegmentIndex + 1, solutionCopy);
+                }
+            }
+        }
+        else
+        {
+            solution[nextSegmentIndex] = getNextDirection<0>(prevDirection);
+            recursiveSearch(h, p, nextSegmentIndex + 1, solution);
+            solution[nextSegmentIndex] = getNextDirection<1>(prevDirection);
+            recursiveSearch(h, p, nextSegmentIndex + 1, solution);
+            solution[nextSegmentIndex] = getNextDirection<2>(prevDirection);
+            recursiveSearch(h, p, nextSegmentIndex + 1, solution);
+            solution[nextSegmentIndex] = getNextDirection<3>(prevDirection);
+            recursiveSearch(h, p, nextSegmentIndex + 1, solution);
+        }
     }
 
 public:
@@ -103,6 +141,7 @@ public:
         : segmentList(std::move(segmentList))
     {}
 
+    template<bool parallel = false>
     void search()
     {
         Hull<size> h;
@@ -113,7 +152,7 @@ public:
         solution[1] = RIGHT;
 
         placeSegment(h, p, segmentList[0], solution[0]);
-        recursiveSearch(h, p, 2, solution);
+        recursiveSearch<parallel>(h, p, 2, solution);
     }
 };
 
